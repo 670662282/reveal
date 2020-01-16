@@ -1,0 +1,136 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <title>reveal.js</title>
+
+    <link rel="stylesheet" href="css/reset.css">
+    <link rel="stylesheet" href="css/reveal.css">
+    <link rel="stylesheet" href="css/theme/black.css">
+
+    <!-- Theme used for syntax highlighting of code -->
+    <link rel="stylesheet" href="lib/css/monokai.css">
+
+    <!-- Printing and PDF exports -->
+    <script>
+            var link = document.createElement( 'link' );
+            link.rel = 'stylesheet';
+            link.type = 'text/css';
+            link.href = window.location.search.match( /print-pdf/gi ) ? 'css/print/pdf.css' : 'css/print/paper.css';
+            document.getElementsByTagName( 'head' )[0].appendChild( link );
+
+
+
+    </script>
+</head>
+<body>
+<div class="reveal">
+    <div class="slides">
+        <section data-markdown>
+            <textarea data-template>
+                # API自动化技术最佳实践
+
+                @Create By Xiao Ao
+            </textarea>
+        </section>
+
+        <section data-markdown>
+            <textarea data-template>
+                ## 自动化要解决什么问题？
+                1. 敏捷开发，产品交付速度的提升，给测试工作带来了很大的挑战。
+                2. 测试时间或被压缩
+                3. 业务功能的累加导致测试范围不断扩大，但这跟测试时长的压缩是矛盾的
+            </textarea>
+        </section>
+        <section>
+            <section data-markdown>
+                <textarea data-template>
+                    ## 自动化测试的优势
+                    - 可以替代大量的手工重复性操作
+                    - 可以大幅提升回归测试的效率
+                    - 可以高效实现某些手工无法实现的测试 如压力or稳定性测试
+                </textarea>
+            </section>
+
+            <section data-markdown>
+                <textarea data-template>
+                    ## 自动化测试并非"银弹"
+                </textarea>
+            </section>
+
+            <section data-markdown>
+                <textarea data-template>
+                    ## 自动化测试的劣势
+                    - 自动化测试无法代替手工测试
+                    - 自动化测试用例开发远大于单次手工测试（业界认为：自动化测试进行5遍才能回本）
+                    - 维护成本较高（无论是测试环境 测试用例和测试数据，都需要跟着需求的变化不断进行调整）
+                </textarea>
+            </section>
+        </section>
+
+        <section>
+            <section>
+                自动化测试的认知误区：
+                自动化测试是为了发现更多的缺陷
+            </section>
+
+            <section>
+                自动化测试的意义更在守住软件质量的底线，确保工作正常软件在新功能引入的不会带来质量回退
+            </section>
+        </section>
+        <section data-markdown>
+            <h2>自动化分层： 自动化测试在合适的领域，才能发挥最大价值</h2>
+            ![image](png/代码生成器.png)
+        </section>
+
+        <section>
+
+            <p class="fragment">
+                apiTest
+            </p>
+
+            <pre><code data-trim>
+              console.log('hello reveal.js!');
+            </code></pre>
+            <aside class="notes">
+                这里是注释。
+            </aside>
+        </section>
+        <section data-markdown>
+            <script type="text/template">
+                - Item 1 <!-- .element: class="fragment" data-fragment-index="2" -->
+                - Item 2 <!-- .element: class="fragment" data-fragment-index="1" -->
+            </script>
+        </section>
+        <section data-background-iframe="https://baidu.com" data-background-interactive>
+
+        </section>
+
+    </div>
+</div>
+
+<script src="js/reveal.js"></script>
+
+<script>
+            // More info about config & dependencies:
+            // - https://github.com/hakimel/reveal.js#configuration
+            // - https://github.com/hakimel/reveal.js#dependencies
+            Reveal.initialize({
+                dependencies: [
+                    { src: 'plugin/markdown/marked.js' },
+                    { src: 'plugin/markdown/markdown.js' },
+                    { src: 'plugin/notes/notes.js', async: true },
+                    { src: 'plugin/highlight/highlight.js', async: true }
+                ],
+
+            // parallaxBackgroundImage: 'https://s3.amazonaws.com/hakim-static/reveal-js/reveal-parallax-1.jpg',
+            });
+
+
+
+
+</script>
+</body>
+</html>
