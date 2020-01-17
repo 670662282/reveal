@@ -66,7 +66,20 @@
                 ### 自动化测试在合适的领域，才能发挥最大价值
                 ![image](images/自动化分层.png)
 
-                自动化分层
+                ---
+                ## 接口测试
+                ## 什么是接口测试？
+                ## 做接口测试的好处
+                ---
+                ## 接口自动化方案选型
+                ### 语言选型
+                - java
+                - python
+                ### 框架选型
+                - HttpRunner <!-- .element: class="fragment" data-fragment-index="1" -->
+                - RobotFramework <!-- .element: class="fragment" data-fragment-index="2" -->
+                - 自己研发 <!-- .element: class="fragment" data-fragment-index="3" -->
+                @@@
 
                 ---
                 ## Api自动化测试的演进之路
@@ -153,21 +166,21 @@
                 <pre><code data-trim class="hljs" data-line-numbers="6,13-16">
                 class TestBaseLineApp(BaseTest):
                 """测试用例数据从mongodb中读取"""
-                @classmethod
-                def setUpClass(cls):
-                    super().setUpClass()
-                    cls.data_provider = TestDataProvider(BASELINE_DB_NAME)
-                    cls.data_provider.set_default_value(
-                        mo_id="6caceded",
-                        entrypt_customer_id=cls.encrypt_customer_id
-                    )
+                    @classmethod
+                    def setUpClass(cls):
+                        super().setUpClass()
+                        cls.data_provider = TestDataProvider(BASELINE_DB_NAME)
+                        cls.data_provider.set_default_value(
+                            mo_id="6caceded",
+                            entrypt_customer_id=cls.encrypt_customer_id
+                        )
 
-                def test_get_baseline_data(self):
-                    api_name = "baseline_get_baseline_data"
-                    test_data_list = self.data_provider.get_test_data(api_name)
-                    for test_data in test_data_list:
-                        with self.subTest(msg=test_data.get('description', ''), params=test_data["params"]):
-                            baseline_get_baseline_data(**test_data["params"])
+                    def test_get_baseline_data(self):
+                        api_name = "baseline_get_baseline_data"
+                        test_data_list = self.data_provider.get_test_data(api_name)
+                        for test_data in test_data_list:
+                            with self.subTest(msg=test_data.get('description', ''), params=test_data["params"]):
+                                baseline_get_baseline_data(**test_data["params"])
                 </code></pre>
                 @@@
                 test_data_provider
@@ -223,7 +236,6 @@
         </section>
 
         <section data-background-iframe="http://yapi.demo.qunar.com/editor/" data-background-interactive>
-            <h2>json-schema-editor</h2>
         </section>
 
         <section>
@@ -234,21 +246,25 @@
             </section>
         </section>
 
+        <section data-markdown data-separator="---" data-separator-vertical="@@@">
+            <script type="text/template">
+                ## 未来计划
+                - 能根据业务规则场景，边界值or参数类型，自动生成部分测试用例
+                - 支持将日志关联到测试用例(可参考robot-framework log实现)
+                - 进一步完善测试报告
+                - 自动对输出日志的异常信息进行分类汇总
+                - 搭建自动化测试基础构架
+            </script>
+        </section>
+
         <section>
             <section data-markdown="">
-                ## 接口自动化测试PipLine
+                ## 自动化测试基础构架
             </section>
             <section data-markdown>
                 ![image](images/自动化测试基础构架.png)
             </section>
         </section>
-
-        <section data-markdown data-separator="---" data-separator-vertical="@@@">
-            <script type="text/template">
-
-            </script>
-        </section>
-
 
 
         <section>
