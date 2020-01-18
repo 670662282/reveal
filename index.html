@@ -34,11 +34,11 @@
 
                 @Create By Xiao Ao
                 ---
-                ## 敏捷开发下，对测试的挑战
-                1. 敏捷开发，产品交付速度的提升，给测试工作带来了很大的挑战。
-                2. 测试时间或被压缩
-                3. 业务功能的累加导致测试范围不断扩大，但这跟测试时长的压缩是矛盾的
-
+                ## 为什么要进行自动化？
+                1. 敏捷开发，产品交付速度提升也催促测试速度提升
+                2. 业务功能的累加导致测试范围不断扩大
+                @@@
+                ![image](images/敏捷迭代.png)
                 ---
                 ## 自动化测试的优势
                 - 可以替代大量的手工重复性操作
@@ -49,8 +49,15 @@
                 @@@
                 ## 自动化测试的不足
                 - 自动化测试无法代替手工测试
-                - 自动化测试用例开发远大于单次手工测试（业界认为：自动化测试进行5遍才能回本）
+                - 自动化测试用例开发远大于单次手工测试
                 - 维护成本较高（无论是测试环境 测试用例和测试数据，都需要跟着需求的变化不断进行调整）
+                @@@
+                ## 自动化测试几种典型应用场景
+                - 有大量机械的重复操作，并且会反复执行的场景，比如批量的回归测试；
+                - 有明确的设计规范且相对稳定的场景，比如接口测试；
+                - 大批量、跨平台的兼容性测试
+                - 长时间不间断执行的测试，比如压力测试、可用性测试等。
+                - UI测试，主流的：Web UI 和App UI
 
                 ---
                 ## 自动化测试的认知误区
@@ -67,20 +74,35 @@
                 ![image](images/自动化分层.png)
 
                 ---
-                ## 接口测试
                 ## 什么是接口测试？
-                ## 做接口测试的好处
                 ---
                 ## 接口自动化方案选型
-                ### 语言选型
-                - java
-                - python
-                ### 框架选型
+                现有开源框架特点
                 - HttpRunner <!-- .element: class="fragment" data-fragment-index="1" -->
-                - RobotFramework <!-- .element: class="fragment" data-fragment-index="2" -->
-                - 自己研发 <!-- .element: class="fragment" data-fragment-index="3" -->
+                - RobotFramework + Request <!-- .element: class="fragment" data-fragment-index="2" -->
                 @@@
+                ### HttpRunner
+                亮点：只需要维护一份 YAML脚本就能进行自动化测试，Locust性能测试。
+                不足：虽然可以使用python代码的方式，来完成复杂的动态计算逻辑，但是涉及到比较复杂的场景，就不那么容易实现。
+                @@@
+                ### RobotFramework
+                RobotFramework: 简化版语法 + 增强版unittest(测试框架) + 高度封装python库
+                @@@
+                RobotFramework的亮点
+                - 什么类型的自动化测试都支持, 因为支持用python扩展。
+                - 有自己的脚本语法，对不懂编码的测试人员比较友好。
+                - 强大的log功能，同类开源框架降维打击。log日志不仅仅和测试用例关联，而且非常详细记录了你每一步的操作。
+                @@@
+                RobotFramework的不足
+                - 因为是什么类型的自动化测试都支持，对比那些只攻一个方向的框架来说，显得有点平庸了。
+                - RobotFramework UI不好用且速度太慢
+                - 部分RobotFramework library库或不全或年久失修，有时候还需要写python代码
+                @@@
+                接口框架方案选型，主要还是根据测试场合和测试需求来选。
 
+                如果是轻量级接口测试，那么HttpRunner 优于RobotFramework。
+
+                如果需要实现复杂的场景接口测试，都需要写代码，既然需要写代码，为什么不直接用代码的方式，不受限于框架，更加灵活，而且可以根据实际测试场景进行定制。
                 ---
                 ## Api自动化测试的演进之路
                 @@@
@@ -183,7 +205,7 @@
                                 baseline_get_baseline_data(**test_data["params"])
                 </code></pre>
                 @@@
-                test_data_provider
+                Test Data Provider
                 ![image](images/测试用例加载器.png)
                 ---
                 ### api自动化测试4.0 response 多种校验方式
