@@ -226,10 +226,10 @@
                 <pre><code data-trim class="hljs" data-line-numbers="4,6">
                 def test_get_help_info(self):
                     """测试help info"""
-                    def assert_help(resp_obj):
+                    def validate(resp_obj):
                         assert resp_obj.extractor('result.baseline.type[0]') == 'xxxxxxxx'
                         assert resp_obj.status_code == 200
-                    help_get_help_info(validate_func=assert_code)
+                    help_get_help_info(dict(validate=validate))
                 </code></pre>
                 @@@
                 json_schema: 用于校验 Response JSON 的格式
