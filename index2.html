@@ -1,0 +1,340 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <title>reveal.js</title>
+
+    <link rel="stylesheet" href="css/reset.css">
+    <link rel="stylesheet" href="css/reveal.css">
+    <link rel="stylesheet" href="css/theme/black.css">
+
+    <!-- Theme used for syntax highlighting of code -->
+    <link rel="stylesheet" href="lib/css/monokai.css">
+
+    <!-- Printing and PDF exports -->
+    <script>
+            var link = document.createElement( 'link' );
+            link.rel = 'stylesheet';
+            link.type = 'text/css';
+            link.href = window.location.search.match( /print-pdf/gi ) ? 'css/print/pdf.css' : 'css/print/paper.css';
+            document.getElementsByTagName( 'head' )[0].appendChild( link );
+
+
+
+    </script>
+</head>
+<body>
+<div class="reveal">
+    <div class="slides">
+        <section data-markdown data-separator="---" data-separator-vertical="@@@">
+            <script type="text/template">
+                # API自动化技术最佳实践
+
+                @Create By Xiao Ao
+                ---
+                ## 为什么要进行自动化？
+                1. 敏捷开发，产品交付速度提升也催促测试速度提升
+                2. 业务功能的累加导致测试范围不断扩大
+                @@@
+                ![image](images/敏捷迭代.png)
+                ---
+                ## 自动化测试的优势
+                - 可以替代大量的手工重复性操作
+                - 可以大幅提升回归测试的效率
+                - 可以高效实现某些手工无法实现的测试 如压力or稳定性测试
+                @@@
+                ## 自动化测试并非"银弹"
+                @@@
+                ## 自动化测试的不足
+                - 自动化测试无法代替手工测试
+                - 自动化测试用例开发远大于单次手工测试
+                - 维护成本较高（无论是测试环境 测试用例和测试数据，都需要跟着需求的变化不断进行调整）
+                @@@
+                ## 自动化测试几种典型应用场景
+                - 有大量机械的重复操作，并且会反复执行的场景，比如批量的回归测试；
+                - 有明确的设计规范且相对稳定的场景，比如接口测试；
+                - 大批量、跨平台的兼容性测试
+                - 长时间不间断执行的测试，比如压力测试、可用性测试等。
+                - UI测试，主流的：Web UI 和App UI
+
+                ---
+                ## 自动化测试的认知误区
+                自动化测试是为了发现更多的缺陷
+                @@@
+                自动化测试的意义更在守住软件质量的底线，确保工作正常软件在新功能引入的不会带来质量回退
+
+                ---
+                ## 自动化分层
+                ### 理想的自动化金字塔
+                ![image](images/自动化金字塔.png)
+                @@@
+                ### 自动化测试在合适的领域，才能发挥最大价值
+                ![image](images/自动化分层.png)
+
+                ---
+                ## 什么是接口测试？
+                接口测试其实就是模拟调用方 去验证被测接口的正确性和容错性
+                通过设计输入参数，和验证输出结果来测试接口（一个功能单元）
+                ---
+                ## 接口测试的方向
+                先从单个接口的测试开始，保障单个接口的正确性和健壮性.
+                然后站在业务逻辑的角度， 串联多个接口来完成业务逻辑的正确性检测。
+                ---
+                ## 接口自动化方案选型
+                现有开源框架特点
+                - HttpRunner <!-- .element: class="fragment" data-fragment-index="1" -->
+                - RobotFramework + Request <!-- .element: class="fragment" data-fragment-index="2" -->
+                @@@
+                ### HttpRunner
+                亮点：只需要维护一份 YAML脚本就能进行自动化测试，Locust性能测试。
+                不足：虽然可以使用python代码的方式，来完成复杂的动态计算逻辑，但是涉及到比较复杂的场景，就不那么容易实现。
+                @@@
+                ### RobotFramework
+                RobotFramework: 简化版语法 + 增强版unittest(测试框架) + 高度封装python库
+                @@@
+                RobotFramework的亮点
+                - 什么类型的自动化测试都支持, 因为支持用python扩展。
+                - 有自己的脚本语法，对不懂编码的测试人员比较友好。
+                - 强大的log功能，同类开源框架降维打击。log日志不仅仅和测试用例关联，而且非常详细记录了你每一步的操作。
+                @@@
+                RobotFramework的不足
+                - 因为是什么类型的自动化测试都支持，对比那些只攻一个方向的框架来说，显得有点平庸了。
+                - RobotFramework UI不好用且速度太慢
+                - 部分RobotFramework library库或不全或年久失修，有时候还需要写python代码
+                @@@
+                接口框架方案选型，主要还是根据测试场合和测试需求来选。
+
+                如果是轻量级接口测试，那么HttpRunner 优于RobotFramework。
+
+                如果需要实现复杂的场景接口测试，都需要写代码，既然需要写代码，为什么不直接用代码的方式，不受限于框架，
+                而且可以根据实际测试场景进行定制, 提升测试效率和灵活性。
+                ---
+                ## Api自动化测试的演进之路
+                @@@
+                ### 一个简单的测试用例的写法
+                <pre><code data-trim class="hljs" data-line-numbers="6,8-12">
+                # test_ap_site.py
+                class ApiUnitTest(unittest.TestCase):
+
+                    @classmethod
+                    def setUpClass(cls):
+                        cls.api_client = requests.Session()
+
+                    def test_create_site(self):
+                        url = "http://xxx.com/create_site"
+                        resp = self.api_client.post(url, data={"site_name": 'auto_create_site'})
+                        self.assertEqual(resp.json()['code'],  0)
+                        self.assertEqual(resp.json()['result']['site_name'], 'auto_create_site')
+                </code></pre>
+
+                ---
+                ### api自动化测试1.0 - api接口封装成可被直接复用的原子方法
+                <pre><code data-trim class="hljs" data-line-numbers="14,18,4-8">
+                # ap_site.py
+                api_client = requests.Session()
+
+                def create_site(site_name, code=0, **kwargs):
+                    url = "http://xxx.com/create_site"
+                    resp = api_client.post(url, data={"site_name": site_name}, **kwargs)
+                    assert code == resp.json()['code'], 'code not equal zero'
+                    return resp
+
+                # test_ap_site.py
+                class ApiUnitTest(unittest.TestCase):
+
+                    def test_create_site(self):
+                        resp = create_site('normal_site')
+                        self.assertEqual(resp.json()['result']['site_name'], 'normal_site')
+
+                    def test_create_chinese_name_site(self):
+                        resp = create_site('中文site')
+                        self.assertEqual(resp.json()['result']['site_name'], '中文site')
+                </code></pre>
+
+                ---
+                ### api自动化测试2.0 - 自动生成 可复用的api代码
+                - [swagger](https://swagger.io/specification/v2/)  描述REST API的格式的一组规范
+                - [Har(HTTP Archive)](http://www.softwareishard.com/blog/har-12-spec/) 一个用来储存HTTP请求/响应信息的格式的"JSON文件"
+
+                swagger yaml文件 生成
+                ```
+                SwaggerCodeGenerator().run(SWAGGER_PATH)
+                ```
+                har抓包文件 生成
+                ```
+                baseline_url = "http://nbad.qavm.net/baseline_api/"
+                HarCodeGenerator(filter_str=baseline_url).run(HAR_PATH)
+                ```
+                @@@
+                ### 代码生成器结构图
+                ![image](images/代码生成器.png)
+
+                ---
+                ### api自动化测试3.0 数据驱动测试
+                <pre><code data-trim class="hljs" data-line-numbers="17-18">
+                def test_l7_ibtn_switch(self):
+                    names = ['http_authentication', 'error_code', 'http_filter',
+                             'http_header_advanced', 'http_compliance', 'bypass_api',
+                             'bypass_file_extension', 'bypass_mobile', 'white_black_list',
+                             'bypass_spider', 'ua_black_list']
+                    params = {
+                        "access_token": self.admin_token,
+                        "customer_id": self.encrypt_customer_id,
+                        "site_id": self.encrypt_site_id,
+                        'domain_port_id': self.encrypt_domain_port_id,
+                        'name': '',
+                        'enable': 1,
+                    }
+
+                    for name in names:
+                        params['name'] = name
+                        with self.subTest(msg=f"test ibtn switch {name}", params=params):
+                            l7_ibtn_switch(**params)
+                </code></pre>
+                @@@
+                ### api自动化测试3.1 测试数据和代码解耦
+                <pre><code data-trim class="hljs" data-line-numbers="6,13-16">
+                class TestBaseLineApp(BaseTest):
+                """测试用例数据从mongodb中读取"""
+                    @classmethod
+                    def setUpClass(cls):
+                        super().setUpClass()
+                        cls.data_provider = TestDataProvider(BASELINE_DB_NAME)
+                        cls.data_provider.set_default_value(
+                            mo_id="6caceded",
+                            entrypt_customer_id=cls.encrypt_customer_id
+                        )
+
+                    def test_get_baseline_data(self):
+                        api_name = "baseline_get_baseline_data"
+                        test_data_list = self.data_provider.get_test_data(api_name)
+                        for test_data in test_data_list:
+                            with self.subTest(msg=test_data.get('description', ''), params=test_data["params"]):
+                                baseline_get_baseline_data(**test_data["params"])
+                </code></pre>
+                @@@
+                Test Data Provider
+                ![image](images/测试用例加载器.png)
+                ---
+                ### api自动化测试4.0 response 多种校验方式
+                - response结果变化 自动识别 <!-- .element: class="fragment" data-fragment-index="1" -->
+                - response json path简化验证 <!-- .element: class="fragment" data-fragment-index="2" -->
+                - response json schema验证 <!-- .element: class="fragment" data-fragment-index="3" -->
+
+                @@@ response结果变化自动识别
+                ![image](images/response_check自识别.png)
+                @@@
+                本次response 和上次response比较结果
+                ![image](images/response_check比较结果.png)
+                @@@
+                response json path简化验证
+                <pre><code data-trim class="hljs" data-line-numbers="4,6">
+                def test_get_help_info(self):
+                    """测试help info"""
+                    def validate(resp_obj):
+                        assert resp_obj.extractor('result.baseline.type[0]') == 'xxxxxxxx'
+                        assert resp_obj.status_code == 200
+                    help_get_help_info(dict(validate=validate))
+                </code></pre>
+                @@@
+                json_schema: 用于校验 Response JSON 的格式
+                <pre><code data-trim >
+                json_schema = {
+                    "$schema": "http://json-schema.org/draft-04/schema#",
+                    "type": "object",
+                    "properties": {
+                        "customer_name":  { "type": "string" },
+                        "customer_id": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "exclusiveMinimum": false,
+                        },
+                        "telephone": {
+                            "type": "string",
+                            "pattern": "^(\\([0-9]{3}\\))?[0-9]{3}-[0-9]{4}$"
+                        }
+                    },
+                    "required": ["customer_name", "customer_id"],
+                  "additionalProperties": false
+                }
+
+                def test_get_customer_info(self):
+                    get_customer_info(json_schema=json_schema)
+                </code></pre>
+
+            </script>
+        </section>
+
+        <section data-background-iframe="https://jsonschema.net/" data-background-interactive>
+        </section>
+
+        <section>
+            <section data-markdown="">
+                ## 接口自动化测试PipLine
+            </section>
+            <section data-background-image="images/接口自动化测试流程图.png" data-background-size="contain" data-background-repeat="no-repeat">
+            </section>
+        </section>
+
+        <section data-markdown data-separator="---" data-separator-vertical="@@@">
+            <script type="text/template">
+                ## 未来计划
+                - 能根据业务规则场景，边界值or参数类型，自动生成部分测试用例
+                - 支持将日志关联到测试用例(可参考robot-framework log实现)
+                - 进一步完善测试报告
+                - 自动对输出日志的异常信息进行分类汇总
+                - 搭建自动化测试基础构架
+            </script>
+        </section>
+
+        <section>
+            <section data-markdown="">
+                ## 自动化测试基础构架
+            </section>
+            <section data-markdown>
+                ![image](images/自动化测试基础构架.png)
+            </section>
+        </section>
+
+
+        <section>
+            <p class="fragment">
+                结尾回顾
+            </p>
+            <aside class="notes">
+                这里是注释。
+            </aside>
+        </section>
+    </div>
+</div>
+
+<script src="js/reveal.js"></script>
+
+<script>
+            // More info about config & dependencies:
+            // - https://github.com/hakimel/reveal.js#configuration
+            // - https://github.com/hakimel/reveal.js#dependencies
+            Reveal.initialize({
+                <!--width: "100%",-->
+                <!--height: "100%",-->
+                <!--margin: 0,-->
+                <!--minScale: 1,-->
+                <!--maxScale: 1,-->
+                dependencies: [
+                    { src: 'plugin/markdown/marked.js' },
+                    { src: 'plugin/markdown/markdown.js' },
+                    { src: 'plugin/notes/notes.js', async: true },
+                    { src: 'plugin/highlight/highlight.js', async: true }
+                ],
+
+            // parallaxBackgroundImage: 'https://s3.amazonaws.com/hakim-static/reveal-js/reveal-parallax-1.jpg',
+            });
+
+
+
+
+</script>
+</body>
+</html>
