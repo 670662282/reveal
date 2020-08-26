@@ -30,9 +30,151 @@
     <div class="slides">
         <section data-markdown data-separator="---" data-separator-vertical="@@@">
             <script type="text/template">
-                # QA团队自动化测试实践之路
+                # 自动化测试实践分享
 
                 @Create By Xiao Ao
+                ---
+                一般自动化测试分两个层次
+                一个是模块级的单元测试
+                一个是系统级的集成测试
+
+                @@@
+                ## 单元测试
+                单元测试错误认知
+                不是用单元测试框架编写的测试就是单元测试
+
+                什么是单元测试？
+                与程序其他部分相隔离，对函数或者类（最小单元）进行验证测试
+
+                @@@
+                为什么要编写单元测试？
+                1. 单元测试能发现百分之70%的bug
+                2. 写单元测试能发现设计上的问题
+                3. 编写单元测试给重构保驾护航
+                4. 减少问题发现的周期，进而降低问题的修复成本
+
+                @@@
+                怎么编写单元测试
+                通常来讲，单元测试的用例是一个“输入数据”和“预计输出”的集合
+
+                单元测试例子
+                <pre><code data-trim class="hljs">
+
+                def build_url(base_url, path):
+                """ prepend url with hostname unless it's already an absolute URL
+                base_url 如果不带http(s) 就默认http
+                """
+                    absolute_http_url_regexp = re.compile(r"^https?://", re.I)
+                    if not isinstance(base_url, str) or not isinstance(path, str):
+                        raise ValueError("invalid type params")
+                    if absolute_http_url_regexp.match(path):
+                        return path
+                    elif base_url:
+                        url = "{}/{}".format(base_url.rstrip("/"), path.lstrip("/"))
+                        return (
+                            url if absolute_http_url_regexp.match(url) else "http://" + url.lstrip("/")
+                        )
+                    else:
+                        raise ValueError("base url missed!")
+                </code></pre>
+
+                @@@
+                build_url函数  用于拼接host和uri
+                功能如下：
+                1. 如果path是完整的URL那么就直接返回
+                2. 如果hostname没有带scheme，则默认给http://
+                3. 能处理 hostname /结尾， uri已/开头， 参数前后带空格等情况，拼接出正常URL
+                4. 非法参数，抛出友好提示
+
+                @@@
+                单元测试用例设计
+                 ![image](images/单元测试用例设计.jpg)
+
+                @@@
+                写单元测试误区
+                1. 要根据函数的功能来设计单元测试用例，而不是根据具体实现来设计测试用例（看代码反推测试用例）
+
+                @@@
+                提高单元测试的可测性：
+
+                在设计中尽可能采用以下原则
+
+                1.降低单个函数复杂度
+
+                函数单一职责，对复杂函数按职责进行拆分，一个函数尽量只做一件事
+
+                @@@
+                2.纯函数
+
+                纯函数是指不依赖于且不改变它作用域之外的变量状态的函数，纯函数无状态
+
+                @@@
+                3.不可变对象
+
+                是创建后状态无法更改的对象。它们更易于交互且更可预测，从而有助于降低系统复杂性，消除全局状态。
+
+
+                @@@
+                mock有2类，
+                1. mock对象
+                2. mock代码
+
+                它的核心思想是一样的：
+
+                核心思想，即用虚假的实现，来替换掉被测试函数的一些依赖项，让我们能把更多的精力放在需要被测试的功能上。
+
+                @@@
+                mock对象 指的是模拟对象，它以有限的受控方式模拟了真实对象的行为
+
+                @@@
+                mock代码 简单的说用来代替真实代码的临时代码，起到隔离和补齐的作用
+
+
+                @@@
+                <pre><code data-trim class="hljs">
+                    # 被测代码
+                class AdaWang():
+                    def func_2(self):
+                        # 内部实现复杂
+                        pass
+
+                    def func_3(self, val):
+                        # 内部实现复杂
+                        pass
+
+                    def func_1(self):
+                        val = self.func_2()
+                        self.func_3(val)
+
+                </code></pre>
+
+                @@@
+                <pre><code data-trim class="hljs">
+                import unittest
+                from unittest.mock import MagicMock
+
+                class A(unittest.TestCase):
+
+                    def test_func_1(self):
+                        ada = AdaWang()
+                        # 假设func_2() 和 func_3() 的内部比较复杂,
+                        # 不能只是简单地调用 func_1() 函数来进行测试
+                        # 很多依赖项的问题需要解决
+
+                        # mock掉相关的依赖项
+                        ada.func_2 = MagicMock(return_value="custom_val")
+                        ada.func_3 = MagicMock()
+
+                        # 执行被测函数
+                        ada.func_1()
+
+                        # 验证func_2被call过
+                        self.assertTrue(ada.func_2.called)
+                        # 验证func_3被指定参数call过
+                        ada.func_3.assert_called_with("custom_val")
+
+                </code></pre>
+
                 ---
                 ## 自动化测试的认知误区
                 自动化测试不是为了发现更多的缺陷
@@ -74,22 +216,6 @@
                 <aside class="notes">
                     通过演示例子来讲解自动化测试流程
                 </aside>
-                ---
-
-                ## 单元测试
-                不是用单元测试框架编写的测试就是单元测试
-
-                保障质量的三板斧
-
-                静态检查
-                单元测试
-                code review
-
-                单元测试是什么, 和集成测试的区别
-                写单元测试的好处？
-
-
-
 
                 ---
                 ## 自动化测试的演进之路
@@ -220,9 +346,16 @@
 
 <!--        <section data-background-iframe="https://jsonschema.net/" data-background-interactive>-->
 <!--        </section>-->
+        <section>
+            <section data-markdown>
+                ![image](images/项目质量保障流程.jpg)
+            </section>
+        </section>
+
+
 
         <section>
-            <section data-markdown="">
+            <section data-markdown>
                 ## 自动化测试基础构架
             </section>
             <section data-markdown>
