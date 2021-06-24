@@ -55,7 +55,8 @@
                  </aside>
                 @@@
                 例子：
-                 <pre><code data-trim class="hljs" data-line-numbers="1,2">
+                 <pre><code data-trim class="hljs">
+                     @tag(CaseTag.SMOKE)
                      def test_force_cache_policy_not_match_source_ip:
                          domain_name, vip, site_id, domain_port_id = get_domain_by_forced_cache(
                             match_url=url,
@@ -66,6 +67,22 @@
                          f5
                          should_be_equal(get_response_headers()['Cache-stat'], 'MISS')
                  </code></pre>
+                @@@
+                <pre><code data-trim class="hljs">
+                    @tag(CaseTag.SMOKE)
+                    def test_force_client_cache_and_backend_server_set_cookies(self):
+                        """当backend set cookies, 开启强制缓存，Cache-stat 应该是HIT;FORCE并且存在Expires
+                        """
+                        url = f"http://{self.vip}/web/cookie/200/force_client_cache?name=ada"
+                        print(get_curl(self.advanced_cache_domain, url, self.vip))
+
+                        self.session.get(url, headers=self.advanced_cache_headers)
+                        resp = self.session.get(url, headers=self.advanced_cache_headers)
+
+                        self.assertNotIn("Cache-Control", resp.headers)
+                        self.assertIn("Expires", resp.headers)
+                        self.assertEqual("HIT;FORCE", resp.headers.get('Cache-stat'))
+                </code></pre>
                 ---
                 ## 自动化测试 编写基本流程
 
@@ -86,7 +103,186 @@
                     通过演示例子来讲解自动化测试流程
 
                 </aside>
+                ---
+                ## 测试框架基本功能
                 @@@
+                ### 一键生成可用项目
+                ```shell
+                root@u2004c:~/gitlab# project_gen --create-project --gen-demo
+                2021-06-24 08:03:47.030 | INFO     | api_test.gen:create_scaffold:38 - Create new project: demo_autotest
+                Project Root Dir: /root/gitlab/demo_autotest
+
+                created folder: demo_autotest
+                created folder: demo_autotest/common
+                created folder: demo_autotest/common/lib
+                created folder: demo_autotest/common/data
+                created folder: demo_autotest/output
+                created folder: demo_autotest/test_case
+                created folder: demo_autotest/test_case/demo
+                created folder: demo_autotest/scripts
+                created file: demo_autotest/output/__init__.py
+                created file: demo_autotest/test_case/__init__.py
+                created file: demo_autotest/common/__init__.py
+                created file: demo_autotest/common/lib/__init__.py
+                created file: demo_autotest/common/data/__init__.py
+                created file: demo_autotest/test_case/demo/__init__.py
+                created file: demo_autotest/scripts/__init__.py
+                created file: demo_autotest/test_case/demo/test_normal.py
+                created file: demo_autotest/test_case/demo/test_subtest.py
+                created file: demo_autotest/run_test.py
+                created file: demo_autotest/.env
+                created file: demo_autotest/Pipfile
+                created file: demo_autotest/env_setting.yaml
+                created file: demo_autotest/.gitignore
+                created file: demo_autotest/Dockerfile
+                created file: demo_autotest/README.md
+                created file: demo_autotest/Jenkinsqa
+                created file: demo_autotest/Jenkinsfile
+                ```
+
+                @@@
+                ### yaml配置文件自动加载
+                1. 一个yaml文件管理多个配置，每块配置以 三个"-"分隔
+                2. 第一个区域是项目配置
+                3. 剩下区域是测试环境配置
+                ![image](images/配置文件.png)
+                @@@
+                ### 配置读取用法
+                <pre><code data-trim class="hljs">
+                    from api_test import get_setting
+                    # 单例模式，自动寻找并加载项目下名为env_setting.yaml
+                    setting = get_setting()
+
+                    # 以下2种获取配置方式都可以
+                    setting.get('env_name')
+                    setting['env_name']
+
+                    # 对于嵌套比较深的方式可以使用这种方式获取
+                    setting.get('spe_groups.nxg.customer_name')
+                </code></pre>
+                @@@
+                ### 用例标记用法
+                - 支持自定义标签
+                - 测试执行的时候可以通过标签选择执行的测试的用例
+                <pre><code data-trim class="hljs">
+                    @unique
+                    class CaseTag(Enum):
+                        # 用例默认ALL标签
+                        ALL = "all"
+                        SMOKE = "smoke"
+                        NEGATIVE = "negative"
+
+                    @tag(CaseTag.SMOKE)
+                    def test_case_1(self):
+                        pass
+
+                    @tag(CaseTag.NEGATIVE)
+                    def test_case_2(self):
+                        pass
+                </code></pre>
+                @@@
+                ### 参数化测试例子
+                <pre><code data-trim class="hljs">
+                class LearnSubTest(unittest.TestCase):
+                """依靠subtest实现参数化测试
+                """
+                    def test_add2(self):
+                        """test 参数化 subTest实现"""
+                        data_list = [
+                            ("test 2 add 3", 2, 3, 5),
+                            ("test 4 add 5", 4, 5, 9),
+                            ("test 5 add 6", 5, 6, 9),
+                        ]
+                        for index, (msg, a, b, expected) in enumerate(data_list):
+                            print(f"执行子测试用例{index}：{msg}, expected: {expected}")
+                            with self.subTest(msg=msg, expected_result=expected):
+                                self.assertEqual(a + b, expected)
+                </code></pre>
+                @@@
+                ### 测试报告显示1
+                ![image](images/测试报告说明1.png)
+                @@@
+                ### 测试报告显示2
+                ![image](images/测试报告说明2.png)
+
+                @@@
+                ### 运行测试用例——代码方式
+                 <pre><code data-trim class="hljs" data-line-numbers="5-10">
+                from api_test.runner import HTMLTestRunner
+                from output import OUTPUT_PATH
+                from test_case import CaseTag, CASE_PATH
+
+                runner = HTMLTestRunner(
+                    verbosity=2,
+                    report_file=os.path.join(
+                        OUTPUT_PATH, 'TestReportDemo.html'),
+                    title="自动化测试demo", debug=False, tb_locals=True, failfast=False)
+                result = runner.run(CASE_PATH, 'test_*.py', run_tag=CaseTag.ALL
+                </code></pre>
+                @@@
+                ### 运行测试用例——命令行方式
+                ```shell
+                root@u2004c:~/gitlab# api_test --help
+                usage: api_test [-h] [--test-dir TEST_DIR] [--case-pattern CASE_PATTERN] [--top-level-dir TOP_LEVEL_DIR] [--run-tag RUN_TAG] [--no-html-report] [--html-report-title REPORT_TITLE] [--html-report-file REPORT_FILE]
+                                [--html-report-template REPORT_TEMPLATE] [--verbosity VERBOSITY] [--failfast] [--no-tb-local] [--logging-level LOGGING_LEVEL] [--logging-file-path FILENAME] [--env ENV] [-V] [--no-proxy]
+
+                Auto Test Runner
+
+                optional arguments:
+                  -h, --help            show this help message and exit
+
+                test:
+                  --test-dir TEST_DIR   Test_case file path.
+                  --case-pattern CASE_PATTERN
+                                        Test_case wildcard pattern.
+                  --top-level-dir TOP_LEVEL_DIR
+                                        You test project top dir.
+                  --run-tag RUN_TAG     Run the tag test case.
+                  --no-html-report      Do not generate html report.
+                  --html-report-title REPORT_TITLE
+                                        Html report title
+                  --html-report-file REPORT_FILE
+                                        Specify html report name, only effective when generating html report.
+                  --html-report-template REPORT_TEMPLATE
+                                        Specify html report template path.
+                  --verbosity VERBOSITY
+                                        level 0, 1, 2, default 2
+                  --failfast            Stop the test run on the first error or failure.
+                  --no-tb-local         No Show local variables in tracebacks.
+
+                logging:
+                  --logging-level LOGGING_LEVEL
+                                        Set the root logger level to the specified level, choose from 'DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'. (default: INFO)
+                  --logging-file-path FILENAME
+                                        Use the specified stream or file to output log. (default: stderr)
+
+                common:
+                  --env ENV             Test env, default read from the config file
+                  -V, --version         Show Api Test version.
+                  --no-proxy            Force close socks5 proxy.
+                root@u2004c:~/gitlab# api_test  --test-dir ./test_case --run-tag smoke --html-report-title 自动化测试demo --verbosity 2
+                ```
+                ---
+                ### Jenkins CI
+                @@@
+                ### Jenkins配置 多参数构建 Git参数
+                ![image](images/jenkins配置1.png)
+                @@@
+                ### Jenkins配置 Git仓库
+                - 指定分支名和Git参数配置的要一致
+                - 脚本路径和项目根目录jenkins pipline文件名一致
+                - 不要选择轻量级检出
+                @@@
+                ![image](images/jenkins配置2.png)
+                @@@
+                首次构建会失败，只会影响通知，不影响测试执行
+                ![image](images/jenkins执行.png)
+                @@@
+                ### 在jenkins查看测试报告
+                ![image](images/在jenkins查看测试报告.png)
+                @@@
+                ![image](images/钉钉通知.png)
+                ---
                 ### 自动化投入后的效率变化
                 ![image](images/自动化投入后的效率变化.png)
 
