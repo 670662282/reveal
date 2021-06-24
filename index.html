@@ -30,234 +30,29 @@
     <div class="slides">
         <section data-markdown data-separator="---" data-separator-vertical="@@@">
             <script type="text/template">
-                # 自动化测试实践分享
+                # 自动化测试培训
 
                 @Create By Xiao Ao
                 ---
-                一般自动化测试分两个层次
-                - 一个是模块级的单元测试
-                - 一个是系统级的集成测试
+                目前自动化测试结构
+                ![image](images/当前的自动化测试结构.png)
                 <aside class="notes">
-                单元测试专注于与外部依赖项隔离的单个系统组件
-                集成测试专注于不同组件集成相互作用，在不隔离外部依赖关系的情况下进行测试
-                集成测试 == 功能测试 == 端到端测试    这三个概念差不多
-                一般情况我们说的自动化测试就是集成测试
-                </aside>
-                @@@
-                ### 什么是单元测试？
-                与程序其他部分相隔离，对函数或者类（最小单元）进行验证测试
-
-                ### 单元测试错误认知
-                认为用单元测试框架编写的测试就是单元测试
-                <aside class="notes">
-                那什么是单元测试？
-                在隔离程序其他部分，对函数或者类 最小单元 进行验证测试
-                有一个误区，认为用单元测试的框架编写的测试就就是单元测试
-                如果你用单测框架去测程序中一个涉及到多个模块的功能，那么这其实就不属于单元测试，因为你的测试对象并非最小单元
+                demo演示（自动构建和手动构建）
                 </aside>
 
-
-                @@@
-                ### 为什么要编写单元测试？
-                1. 在良好测试用例设计下，单元测试能发现百分之70%的bug
-                2. 写单元测试能发现设计上的问题
-                3. 编写单元测试给重构保驾护航
-                4. 减少问题发现的周期，进而降低问题的修复成本
-                5. 借助单元测试快速熟悉代码
-
-                <aside class="notes">
-                其一
-                在良好测试用例设计下， 单元测试能够发现百分之70%的bug
-
-                其二
-                能够发现设计上的问题
-                代码的可测试性是评判代码质量的一个重要标准。
-                对于一段代码，如果很难为其编写单元测试，或者单元测试写起来很吃力
-                那往往就意味着代码设计得不够合理，比如，代码高度耦合,  大量使用静态函数、全局变量等。
-
-                其三
-                适应变更，适合敏捷开发，编写单元测试给重构保驾护航
-                重构需要单元测试来支持，重构既不修正错误，又不增加新的功能
-                代码在重构之后，需要执行单元测试保证重构之后功能正常，且没有发生变化
-                一旦变更导致错误发生，借助于单元测试可以快速定位并修复错误。
-                软件工程里唯一不变化的地方就是变化，敏捷开发要求拥抱变化，
-                如果没有单元测试，拥抱变化只是一个美好的想法
-
-                其四
-                减少bug发现的周期，进而降低bug的修复成本。
-                一个Bug发现的越早，修复成本和风险就越低，后期Bug的修复不仅增加沟通时间，还可能引入新的问题，增加测试验证时间，项目的进度也有延迟上线的风险
-                单元测试将bug发现周期缩短，基本上在现场就发现问题，这降低了 Bug 的修复成本。如果问题在系统的集成测试阶段发现，那么从bug定位，到回忆当初实现这段代码时候的思路，到最终去解决掉它，必然需要多费几倍甚至几十倍的时间。
-
-                其五
-                借助单元测试快速熟悉代码
-                查看单元测试中编写的test case，便能知道代码实现了什么功能，有哪些特殊情况需要考虑，有哪些边界条件需要处理。
-                </aside>
-                @@@
-                ### 怎么编写单元测试
-                通常来讲，单元测试的用例是一个“输入数据”和“预计输出”的集合
-                在明确了代码需要实现的逻辑功能的基础上，给定什么输入，应该产生什么输出
-
-                单元测试例子
-                <pre><code data-trim class="hljs">
-
-                def build_url(base_url, path):
-                """ prepend url with hostname unless it's already an absolute URL
-                base_url 如果不带http(s) 就默认http
-                """
-                    absolute_http_url_regexp = re.compile(r"^https?://", re.I)
-                    if not isinstance(base_url, str) or not isinstance(path, str):
-                        raise ValueError("invalid type params")
-                    if absolute_http_url_regexp.match(path):
-                        return path
-                    elif base_url:
-                        url = "{}/{}".format(base_url.rstrip("/"), path.lstrip("/"))
-                        return (
-                            url if absolute_http_url_regexp.match(url) else "http://" + url.lstrip("/")
-                        )
-                    else:
-                        raise ValueError("base url missed!")
-                </code></pre>
-
-                @@@
-                build_url函数  用于拼接host和uri
-                功能如下：
-                1. 如果path是完整的URL那么就直接返回
-                2. 如果hostname没有带scheme，则默认给http://
-                3. 能处理 hostname /结尾且uri/开头、参数前后带空格等特殊情况，能拼接出正常URL
-                4. 非法参数，抛出友好提示
-
-                @@@
-                单元测试用例通用设计
-                - 如果要实现正确的功能逻辑，会有哪几种正常的输入
-                - 是否有需要特殊处理的多种边界输入
-                - 各种潜在非法输入的可能性以及如何处理
-                 ![image](images/单元测试用例设计.jpg)
-
-                @@@
-                编写单元测试错误的思维惯性
-                1. <strong>根据具体实现来设计测试用例（看代码反推测试用例），而不是根据函数的功能来设计单元测试用例</strong>
-                <aside class="notes">
-                开发人员在编写单元测试的时候很容易 出现
-                根据代码实现逻辑来设计测试用例（看代码反推测试用例)， 这样没有达到实际效果，成了掩耳盗铃
-                而且一旦对代码进行重构，在代码的外部行为不变的情况下，对代码的实现逻辑进行了修改，那原本的单元测试都会运行失败，也就起不到为重构保驾护航的作用了，也违背了写单元测试的初衷。
-                所以编写单元测试不要依赖被测试函数的具体实现逻辑，只关心被测函数实现了什么功能。
-                </aside>
-                @@@
-                怎么使单元测试易于编写？ —— 提高单元测试的可测性
-
-                在设计中尽可能采用以下原则
-
-                1.函数单一职责
-
-                函数单一职责，对复杂函数按职责进行拆分，一个函数尽量只做一件事
-
-                @@@
-                2.纯函数
-
-                纯函数是指不依赖于且不改变它作用域之外的变量状态的函数，纯函数无状态
-                <aside class="notes">
-                之前测试用例设计中被测函数 build_url就是一个纯函数，纯函数是无状态
-                给定输入， 不管运行多少次不改变作用域之外的变量， 输出结果都一样
-                纯函数非常适合于单元测试。
-                </aside>
-
-                @@@
-                ## 怎么隔离依赖？ —— Mock
-                引用《淘宝网-接口测试白皮书》中的对Mock的定义
-                ![image](images/Mock定义.png)
-
-                @@@
-                测试中的 Mock 可以大致分为两类: mock对象（服务）和mock代码, 他们的核心思想是一样的
-
-                核心思想，即用虚假的实现，来替换掉被测试对象的一些依赖项，让我们能把更多的精力放在需要被测试的功能上。
-
-                @@@
-                mock对象 指的是模拟真实对象的行为, 构造一个依赖的服务并给予他预期的服务返回值，适用范围广
-
-                mock代码 简单的说用来代替真实代码的临时代码，起到隔离和补齐的作用, 常用单元测试
-
-
-                @@@
-                <pre><code data-trim class="hljs">
-                    # 被测代码
-                class AdaWang():
-                    def func_2(self):
-                        # 内部实现复杂
-                        pass
-
-                    def func_3(self, val):
-                        # 内部实现复杂
-                        pass
-
-                    def func_1(self):
-                        val = self.func_2()
-                        self.func_3(val)
-
-                </code></pre>
-
-                @@@
-                <pre><code data-trim class="hljs">
-                import unittest
-                from unittest.mock import MagicMock
-
-                class TestAdaWang(unittest.TestCase):
-
-                    def test_func_1(self):
-                        ada = AdaWang()
-                        # 假设func_2() 和 func_3() 的内部比较复杂,
-                        # 不能只是简单地调用 func_1() 函数来进行测试
-                        # 很多依赖项的问题需要解决
-
-                        # mock掉相关的依赖项
-                        ada.func_2 = MagicMock(return_value="custom_val")
-                        ada.func_3 = MagicMock()
-
-                        # 执行被测函数
-                        ada.func_1()
-
-                        # 验证func_2被call过
-                        self.assertTrue(ada.func_2.called)
-                        # 验证func_3被指定参数call过
-                        ada.func_3.assert_called_with("custom_val")
-
-                </code></pre>
-
-                @@@
-                ## 单元测试框架实践
-                1. 团队内部需要统一单元测试框架
-                2. 引入计算代码覆盖率的工具
-                3. 单元测试执行、代码覆盖率统计和持续集成流水线做集成，以确保每次代码递交，都会自动触发单元测试
-                <aside class="notes">
-                    通过的标准是单元测试通过和单元测试覆盖率是否达标，来确定代码是否可以接受
-                </aside>
-
-                ---
-                ## 自动化测试的认知误区
-                自动化测试不是为了发现更多的缺陷
-                <aside class="notes">
-                    其实手工测试发现的缺陷数量通常比自动化测试要更多
-                </aside>
-                @@@
-                自动化测试的意义更在守住软件质量的底线，确保工作正常软件在新功能引入的不会带来质量回退
-
-                ---
-                ## 认识自动化优劣势
-                1. 可以代替大量的手工重复性操作，可以把更多的时间花在更全面的用例设计和其他类型测试上
-                2. 自动化测试可以大幅提升回归测试的效率，非常适合敏捷开发过程
-                3. 测试用例脆弱、不够智能，无法应对被测系统的变化 <!-- .element: class="fragment" data-fragment-index="1" -->
-                4. 测试用例开发工作量远大于单次手工测试量 <!-- .element: class="fragment" data-fragment-index="2" -->
-                5. 在实施自动化测试初期 用例开发效率低 <!-- .element: class="fragment" data-fragment-index="3" -->
-                <aside class="notes">
-                    为什么要说自动化的劣势，这有助于在自动化测试实践的时候，少踩一些坑
-
-                    测试用例脆弱、不够智能，只是按照写好的预订步骤执行，当出现意外事件， 往往无能为力
-                    测试用例开发工作量远大于单次手工测试量， 当开发完成的测试用例有效执行次数大于5次，才能收回自动化测试的成本
-                    在实施自动化测试初期 用例开发效率通常比较低，在整个自动化测试体系成熟之后，大量初期开发的测试用例都需要重构
-                </aside>
                 ---
                 ## 自动化测试用例开发的基本原则
                 - DAMP原则（通过描述性和有意义的短语来增加可读性）
                 - DRY原则（避免冗余）
+                - 同一个suite的下数据共享，不同suite下数据隔离
+                - 不同测试用例之间独立互不影响，没有执行先后顺序
+                - 正确设置和清理测试环境，避免被脏数据影响
+                - 单个用例单一测试目的，保持简单，当有多个测试目的，应该拆分
+                 <aside class="notes">
+                     用例简单 更愿意写
+                     维护简单 更愿意维护
+                     不然用例代码只会随着时间腐朽
+                 </aside>
                 @@@
                 例子：
                  <pre><code data-trim class="hljs" data-line-numbers="1,2">
@@ -274,7 +69,7 @@
                 ---
                 ## 自动化测试 编写基本流程
 
-                1. <strong> 准备测试数据</strong>
+                1. <strong> 准备测试数据</strong> 不同的测试对象需要不同的测试数据
                 2. 请求被测系统服务
                 3. <strong>验证被测系统服务是否符合预期</strong>
                 4. 清理测试数据
@@ -291,171 +86,13 @@
                     通过演示例子来讲解自动化测试流程
 
                 </aside>
-
-                ---
-                ## 自动化测试的演进之路
                 @@@
-                ###  api自动化测试1.0
-                ### 一个简单的测试用例的写法
-                <pre><code data-trim class="hljs" data-line-numbers="6,8-12">
-                # test_ap_site.py
-                class ApiUnitTest(unittest.TestCase):
-
-                    @classmethod
-                    def setUpClass(cls):
-                        cls.api_client = HttpClient()
-
-                    def test_create_site(self):
-                        url = "http://xxx.com/create_site"
-                        resp = self.api_client.post(url, data={"site_name": 'auto_create_site'})
-                        self.assertEqual(resp.json()['code'],  0)
-                        self.assertEqual(resp.json()['result']['site_name'], 'auto_create_site')
-
-                    def test_create_chinese_name_site(self):
-                        url = "http://xxx.com/create_site"
-                        resp = self.api_client.post(url, data={"site_name": '中文site'})
-                        self.assertEqual(resp.json()['code'],  0)
-                        self.assertEqual(resp.json()['result']['site_name'], '中文site')
-                </code></pre>
-
-                ---
-                ### api自动化测试2.0
-                自动化生成可复用的api代码
-                支持以下格式生成api sdk client代码
-                - [swagger](https://swagger.io/specification/v2/)  描述REST API的格式的一组规范
-                - [Har(HTTP Archive)](http://www.softwareishard.com/blog/har-12-spec/) 一个用来储存HTTP请求/响应信息的格式的"JSON文件"
-
-                @@@
-                swagger docs生成的其中一个api
-
-                目前统计 一共生成了1w多行代码（去除空格和注释）
-                <pre><code data-trim class="hljs">
-                def get_op_site_list_op(customer_id: str,
-                        access_token: str,
-                        client_=None,
-                        **kwargs):
-                """Retrieves Origin Protection site list by Customer ID.
-                :param client_  requests session client
-                :param customer_id ('Unique identifier of a customer. Can be obtained by invoking [this '
-             'API](#retrieves-a-list-of-customers-with-pagination).')
-                :type: string, required:True
-                    省略部分接口文档
-                :return: resp -> response object
-                """
-
-                    name_ = kwargs.pop('name_', 'get_op_site_list_op')
-                    url_ = f'/spe/customer/{customer_id}/op/sites'
-                    resp = client_.get(url_,
-                                       params={'access_token': access_token},
-                                       name=name_,
-                                       **kwargs)
-                    return ResponseObj(resp)
-                </code></pre>
-                @@@
-                2.0的测试用例写法如下
-                <pre><code data-trim class="hljs" data-line-numbers="14,18,4-8">
-                api_client = HttpClient()
-
-                class ApiUnitTest(unittest.TestCase):
-
-                    def test_create_site(self):
-                        resp = create_site('normal_site', api_client)
-                        self.assertEqual(resp.json()['code'],  0)
-                        self.assertEqual(resp.json()['result']['site_name'], 'normal_site')
-
-                    def test_create_chinese_name_site(self):
-                        resp = create_site('中文site',  api_client)
-                        self.assertEqual(resp.json()['code'],  0)
-                        self.assertEqual(resp.json()['result']['site_name'], '中文site')
-                </code></pre>
-                ---
-                ### api自动化测试3.0
-                ### 进一步增加test case编写的简便性和易读性
-                - 封装断言assert
-                - 增加response数据抽取器
-                - 链式编写（利用编辑器的提示达到易用性）
-                @@@
-                 3.0的测试用例写法如下
-                <pre><code data-trim class="hljs" data-line-numbers="5-6,10-11">
-                api_client = HttpClient()
-                class ApiUnitTest(unittest.TestCase):
-                    def test_create_site(self):
-                        create_site('normal_site', api_client
-                        ).assert_code(
-                        ).assert_resp_json("result.site_name", 'normal_site')
-
-                    def test_create_chinese_name_site(self):
-                        create_site('中文site', api_client
-                        ).assert_code(
-                        ).assert_resp_json("result.site_name", '中文site')
-                </code></pre>
-
-                ---
-                ### api自动化测试4.0
-                ### 测试框架化
-                - 自定义request库
-                - 多环境配置切换功能
-                - 接口代码生成功能
-                - 自动监测 response 结构以及字段值的变化
-                - response json 数据抽取器
-                @@@
-                ### 测试框架化
-                - response json schema验证
-                - cli命令行调用测试执行
-                - testcase tag 标签化
-                - 测试报告
-                - 数据驱动功能（测试数据变量化）
-                ---
-                ### api自动化测试5.0
-                ### spe接口和specp接口用例复用
-                test case 用例代码减少百分之45%，整个测试业务代码不到1w行
-                ---
-                ### 自动化测试6.0
-                ### 测试执行环境docker化
-                - 通过组合多个docker-compose 配置文件达到切换测试执行环境
-                - 拆分test case到不同docker中并行运行
-                <pre><code data-trim class="hljs">
-                    docker-compose -f docker-compose.yml -f docker-compose.qlo1-cdd.yml    up -d
-                    docker-compose -f docker-compose.yml -f docker-compose.staging-cdd.yml up -d
-                </code></pre>
+                ### 自动化投入后的效率变化
+                ![image](images/自动化投入后的效率变化.png)
 
             </script>
         </section>
 
-<!--        <section data-background-iframe="https://jsonschema.net/" data-background-interactive>-->
-<!--        </section>-->
-        <section>
-            <section data-markdown>
-                ## 自动化测试流程
-                ![image](images/项目质量保障流程.jpg)
-            </section>
-        </section>
-
-
-
-        <section>
-            <section data-markdown>
-                ## 自动化测试基础构架
-            </section>
-            <section data-markdown>
-                ![image](images/自动化测试基础构架.jpg)
-            </section>
-        </section>
-
-        <section>
-            <p class="fragment">
-                总结
-            <aside class="notes">
-                总结：
-                1. 单元测试和集成测试的区别
-                2. 单元测试的价值
-                3. qa自动化测试演进之路
-                3. 自动化测试基本架构
-                这其实才是最核心的一个认知问题（首先得相信，同意）：应当重视我们的测试代码，它同样也是我们的开发成果，理应获得和模块的功能代码同等重要的地位
-            </aside>
-            </p>
-
-        </section>
     </div>
 </div>
 
