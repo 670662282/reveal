@@ -55,7 +55,6 @@
                 @@@
                 例子：
                  <pre><code data-trim class="hljs">
-                     @tag(CaseTag.SMOKE)
                      def test_force_cache_policy_not_match_source_ip:
                          domain_name, vip, site_id, domain_port_id = get_domain_by_forced_cache(
                             match_url=url,
@@ -68,7 +67,6 @@
                  </code></pre>
                 @@@
                 <pre><code data-trim class="hljs">
-                    @tag(CaseTag.SMOKE)
                     def test_force_client_cache_and_backend_server_set_cookies(self):
                         """当backend set cookies, 开启强制缓存，Cache-stat 应该是HIT;FORCE并且存在Expires
                         """
@@ -206,17 +204,16 @@
 
                 @@@
                 ### 运行测试用例——代码方式
-                 <pre><code data-trim class="hljs" data-line-numbers="5-10">
-                from api_test.runner import HTMLTestRunner
-                from output import OUTPUT_PATH
-                from test_case import CaseTag, CASE_PATH
+                 <pre><code data-trim class="hljs">
+                def run():
+                    from api_test.runner import HTMLTestRunner
+                    from test_case import CaseTag, CASE_PATH
 
-                runner = HTMLTestRunner(
-                    verbosity=2,
-                    report_file=os.path.join(
-                        OUTPUT_PATH, 'TestReportDemo.html'),
-                    title="自动化测试demo", debug=False, tb_locals=True, failfast=False)
-                result = runner.run(CASE_PATH, 'test_*.py', run_tag=CaseTag.ALL
+                    runner = HTMLTestRunner(
+                        verbosity=2,
+                        report_file='TestReportDemo.html',
+                        title="自动化测试demo", debug=False, tb_locals=True, failfast=False)
+                    result = runner.run(CASE_PATH, 'test_*.py', run_tag=CaseTag.ALL
                 </code></pre>
                 @@@
                 ### 运行测试用例——命令行方式
